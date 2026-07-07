@@ -8,7 +8,7 @@ public static class ExpenseFactory
     {
         if (amount <=0 || amount > 1_000_000m)
         {
-            throw new InvalidExpenseException ($"Invalid amount must be positive and below 1M");
+            throw new InvalidExpenseException ($"Invalid! Amount must be positive and below 1M");
         }
         return Math.Round(amount,2);
     }
@@ -22,7 +22,12 @@ public static class ExpenseFactory
 
     public static RecurringExpense CreateRecurring(string description, decimal amount,
                                   ExpenseCategory category, DateOnly date, int timesPerMonth)
+                                  
     {
+        if (timesPerMonth < 1)
+        {
+            throw new InvalidExpenseException($"Recurring times must be at least 1.");
+        }
         return new RecurringExpense(Guid.NewGuid(), description, ValidateAmount(amount), category, date, timesPerMonth);
     }
 
