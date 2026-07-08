@@ -16,7 +16,7 @@ public static class ExpenseFactory
     public static OneTimeExpense  CreateOneTime(string description, decimal amount,
                                   ExpenseCategory category, DateOnly date)
     {
-        return new OneTimeExpense(Guid.NewGuid(), description, ValidateAmount(amount), category, date);
+        return new OneTimeExpense(Guid.NewGuid(), description.Trim(), ValidateAmount(amount), category, date);
     }
     
 
@@ -28,7 +28,7 @@ public static class ExpenseFactory
         {
             throw new InvalidExpenseException($"Recurring times must be at least 1.");
         }
-        return new RecurringExpense(Guid.NewGuid(), description, ValidateAmount(amount), category, date, timesPerMonth);
+        return new RecurringExpense(Guid.NewGuid(), description.Trim(), ValidateAmount(amount), category, date, timesPerMonth);
     }
 
 }

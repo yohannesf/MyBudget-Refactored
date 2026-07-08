@@ -14,7 +14,7 @@ public abstract record Expense(Guid Id, string Description,
     
     public virtual string ToReportLine()    //— a one-line summary of the expense
     {
-        return $"{Date: yyyy-mm-dd}  {Category} {Description} ${MonthlyImpact:0.00}";
+        return $"{Date: yyyy-MM-dd}  {Category} {Description} ${MonthlyImpact:0.00}";
     } 
 }
 
