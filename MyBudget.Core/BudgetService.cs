@@ -24,7 +24,7 @@ public class BudgetService : IBudgetService
         if (MonthlyLimit == 0)
         return BudgetStatus.NotSet;
 
-        decimal remaining = Remaining(totalSpent)
+        decimal remaining = Remaining(totalSpent);
 
         if (remaining < 0m)
             return BudgetStatus.OverBudget;
