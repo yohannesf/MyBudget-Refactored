@@ -13,10 +13,19 @@ public static class ExpenseFactory
         return Math.Round(amount,2);
     }
 
+    public static string ValidateDescription(string description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            throw new InvalidExpenseException("Description cannot be blank.");
+        }
+        return description.Trim();
+    }
+
     public static OneTimeExpense  CreateOneTime(string description, decimal amount,
                                   ExpenseCategory category, DateOnly date)
     {
-        return new OneTimeExpense(Guid.NewGuid(), description.Trim(), ValidateAmount(amount), category, date);
+        return new OneTimeExpense(Guid.NewGuid(), ValidateDescription(description), ValidateAmount(amount), category, date);
     }
     
 
@@ -28,7 +37,7 @@ public static class ExpenseFactory
         {
             throw new InvalidExpenseException($"Recurring times must be at least 1.");
         }
-        return new RecurringExpense(Guid.NewGuid(), description.Trim(), ValidateAmount(amount), category, date, timesPerMonth);
+        return new RecurringExpense(Guid.NewGuid(), ValidateDescription(description), ValidateAmount(amount), category, date, timesPerMonth);
     }
 
 }

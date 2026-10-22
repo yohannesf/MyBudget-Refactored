@@ -33,9 +33,9 @@ so the same code runs against `JsonExpenseStore` in the app and `InMemoryExpense
   by `TimesPerMonth`) and renders its own report line through `IReportable`. Polymorphic JSON
   attributes (`[JsonPolymorphic]` / `[JsonDerivedType]`) let the base type round-trip to disk
   without losing the subtype.
-- **Validation in one place.** `ExpenseFactory` rejects amounts that are zero, negative or over
-  1,000,000, rounds to two decimals, rejects recurring expenses that occur less than once a month,
-  and assigns each expense a `Guid`.
+- **Validation in one place.** `ExpenseFactory` rejects blank descriptions and amounts that are
+  zero, negative or over 1,000,000, rounds to two decimals, rejects recurring expenses that occur
+  less than once a month, and assigns each expense a `Guid`.
 - **Repository with LINQ queries.** `ExpenseRepository` loads from the injected store, then serves
   expenses ordered by date, the overall monthly total, totals grouped by category, and a
   per-category filter, and saves back through the store.
