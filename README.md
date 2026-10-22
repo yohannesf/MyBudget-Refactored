@@ -1,54 +1,71 @@
-# MyBudget — Assignment 2 (Provided Pack)
+# MyBudget
 
-This pack gives you the **contract** and the **UI**, not the solution. Your task
-is to design and build the classes and records yourself, following the
-"Build specification" section of the assignment brief, until the whole solution
-compiles and every provided test passes.
+A layered C# / .NET 10 console app for tracking monthly expenses against a budget. It keeps
+one-time and recurring expenses, reports totals by category, warns when you are close to or
+over your monthly limit, and saves everything to a JSON file between runs.
 
-> Important: **this solution does NOT compile as delivered.** The console UI and
-> the unit tests reference types you have not created yet. Creating those types
-> correctly is the assignment.
+Built for the Advanced C# course at Humber Polytechnic. The course supplied the interfaces,
+the console UI and the xUnit test suite; I designed and implemented the domain model,
+services, persistence and dependency-injection wiring behind them.
 
-## What is provided
+## Architecture
 
 ```
 MyBudget.sln
-├─ MyBudget.Core/
-│   ├─ ExpenseCategory.cs        enum (provided)
-│   ├─ InvalidExpenseException.cs (provided)
-│   ├─ IReportable.cs            interface (provided)
-│   ├─ IExpenseStore.cs          interface (provided)
-│   ├─ IExpenseRepository.cs     interface (provided)
-│   └─ IBudgetService.cs         interface + BudgetStatus enum (provided)
-├─ MyBudget.App/
-│   ├─ ConsoleApp.cs             the menu UI (provided)
-│   └─ Program.cs                DI wiring — YOU complete the TODO
-├─ MyBudget.Data/                (empty — you add the JSON store)
-└─ MyBudget.Tests/               provided xUnit suite + fake (DO NOT MODIFY)
+├─ MyBudget.Core/     domain model and business rules (no I/O)
+│   ├─ Expenses.cs           Expense record hierarchy
+│   ├─ ExpenseFactory.cs     validation and creation
+│   ├─ ExpenseRepository.cs  in-memory collection + aggregate queries
+│   └─ BudgetService.cs      monthly limit and budget status
+├─ MyBudget.Data/     persistence
+│   └─ JsonExpenseStore.cs   IExpenseStore backed by a JSON file
+├─ MyBudget.App/      console UI + composition root (Program.cs)
+└─ MyBudget.Tests/    xUnit tests with a hand-written in-memory fake
 ```
 
-## What you build (see the brief for exact signatures)
+Core depends only on abstractions. The repository talks to `IExpenseStore`, not to a file,
+so the same code runs against `JsonExpenseStore` in the app and `InMemoryExpenseStore` in tests.
 
-- `MyBudget.Core/Expense.cs` — the `Expense` record hierarchy (base + two derived types)
-- `MyBudget.Core/ExpenseFactory.cs` — validation + creation
-- `MyBudget.Core/BudgetService.cs` — implements `IBudgetService`
-- `MyBudget.Core/ExpenseRepository.cs` — implements `IExpenseRepository`
-- `MyBudget.Data/JsonExpenseStore.cs` — implements `IExpenseStore`
-- `MyBudget.App/Program.cs` — register your services with the DI container
-- A test class of **your own** (additional to the provided tests)
+## What I built
 
-## Workflow
+- **Expense model.** An abstract `Expense` record with `OneTimeExpense` and `RecurringExpense`
+  subtypes. Each one computes its own `MonthlyImpact` (a recurring expense multiplies its amount
+  by `TimesPerMonth`) and renders its own report line through `IReportable`. Polymorphic JSON
+  attributes (`[JsonPolymorphic]` / `[JsonDerivedType]`) let the base type round-trip to disk
+  without losing the subtype.
+- **Validation in one place.** `ExpenseFactory` rejects amounts that are zero, negative or over
+  1,000,000, rounds to two decimals, rejects recurring expenses that occur less than once a month,
+  and assigns each expense a `Guid`.
+- **Repository with LINQ queries.** `ExpenseRepository` loads from the injected store, then serves
+  expenses ordered by date, the overall monthly total, totals grouped by category, and a
+  per-category filter, and saves back through the store.
+- **Budget rules.** `BudgetService` holds an encapsulated monthly limit and classifies spending as
+  `NotSet`, `OnTrack`, `AlmostOut` (under 10% of the limit left) or `OverBudget`.
+- **JSON persistence.** `JsonExpenseStore` returns an empty list when the file does not exist yet
+  and writes the full list back on save.
+- **Dependency injection.** `Program.cs` uses `Microsoft.Extensions.Hosting` to register the
+  store, repository, budget service and UI as singletons against their interfaces, then resolves
+  and runs the console app.
 
-1. Read the "Build specification" in the assignment brief.
-2. Create the types above with the exact names, namespaces, and signatures given.
-3. Build the solution; fix compile errors until it builds.
-4. Run the tests (Test Explorer or `dotnet test`) and make them all green.
-5. Add your own tests, run the app (`dotnet run --project MyBudget.App`), and
-   commit to GitHub as you go.
+## Concepts practiced
 
-## Rules
+Records and inheritance, abstract members and overrides, interfaces, encapsulation, custom
+exceptions, LINQ (`OrderBy`, `GroupBy`, `ToDictionary`, `Sum`), `System.Text.Json` polymorphic
+serialization, dependency inversion, the repository pattern, DI containers and service lifetimes,
+and unit testing with fakes instead of a mocking framework.
 
-- Do not modify the provided interfaces, the UI, or the test files.
-- Match the names/signatures in the brief exactly — the provided UI and tests
-  depend on them.
-- No mocking frameworks; use the hand-written `InMemoryExpenseStore` fake pattern.
+## Run it
+
+Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
+
+```bash
+dotnet run --project MyBudget.App
+```
+
+Expenses are saved to `expenses.json` next to the built app.
+
+## Test it
+
+```bash
+dotnet test
+```
